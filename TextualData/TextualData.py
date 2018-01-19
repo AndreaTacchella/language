@@ -1,3 +1,6 @@
+from io import open
+import numpy as np
+
 class TextualData():
     def __init__(self, path):
         self.full_text = []
@@ -27,8 +30,11 @@ class TextualData():
                 ret[i,0,word_to_ix['UNK']] = 1
         return ret
 
-    def random_string(self, rnd, batch_len):
-        my_rnd = rnd
+    def random_string(self, rnd=-1, batch_len):
+        if rnd < 0:
+            my_rnd = np.random.randint(self.text_len-batch_len)
+        else:
+            my_rnd = rnd
         while (self.full_text[my_rnd] != " ") & (my_rnd > 0):
             my_rnd = my_rnd - 1
         k = 0
@@ -37,8 +43,8 @@ class TextualData():
         input_string = self.full_text[my_rnd:my_rnd + batch_len + k]
         return input_string
 
-    def __import_text_file(self):
+    def __import_text_file(self, path):
         self.full_text = open(path, encoding="utf-8").read()
-        self.alphabet = list(set([l for l in text]))
-        self.alpha_len = len(alphabet)
-        self.letter_to_ix = dict((alphabet[i], i) for i in range(len(alphabet)))
+        self.alphabet = list(set([l for l in self.full_text]))
+        self.alpha_len = len(self.alphabet)
+        self.letter_to_ix = dict((self.alphabet[i], i) for i in range(self.alpha_len))
