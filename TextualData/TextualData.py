@@ -57,7 +57,8 @@ class TextualData():
         return input_string
 
     def get_batch(self, string_len, batch_size):
-        return batch
+        batch = [self.string_to_tensor(self.random_string_fixed_size(string_len)) for i in range(len(batch_size))]
+        return torch.cat(batch,axis=1)
 
     def __import_text_file(self, path):
         self.full_text = open(path, encoding="utf-8").read()
