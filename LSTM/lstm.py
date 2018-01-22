@@ -33,9 +33,16 @@ class LSTMmodel(nn.Module):
         # print true_out[0].size()
         return torch.stack(true_out)
 
-    def train(self, mode=True):
+    def train(self, batch):
         self.zero_grad()
-        loss = 0
+        input = batch[0]
+        labels = batch[1]
+        loss = self.loss_func(self.forward(input), labels)
+        loss.backwards()
+        self.optimizer.step()
+        return loss
+
+
 
 
 

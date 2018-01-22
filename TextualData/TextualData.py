@@ -59,6 +59,10 @@ class TextualData():
     def get_batch(self, string_len, batch_size):
         batch = [self.string_to_tensor(self.random_string_fixed_size(string_len)) for i in range(len(batch_size))]
         return torch.cat(batch,axis=1)
+    #TODO: ADD label return in get_batch, so that batch is in the format expected by train method of model
+
+    def onehot_to_class(self, vector):
+        return Variable(torch.LongTensor([i for i in range(len(vector.data[0])) if vector.data[0][i] > 0]))
 
     def __import_text_file(self, path):
         self.full_text = open(path, encoding="utf-8").read()
