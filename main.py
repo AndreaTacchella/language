@@ -5,6 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch
 import time
+
+
 from torch.autograd import Variable
 
 text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt')
@@ -42,7 +44,7 @@ for epochs in range(1):
     index = 0
     done_batches = 0
     rnn.init_hidden()
-    while index < text.train_len+string_len*batch_size:
+    while index < text.train_len-string_len*batch_size:
     #while index < 10000:
 
         my_loss = rnn.train(text.get_batch(string_len,batch_size,index,1))
