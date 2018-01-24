@@ -23,10 +23,10 @@ def generate(model, inp='#', temp = 0.7, my_len = 150):
         row += text.alphabet[torch.multinomial(output.data.view(-1).div(temp).exp(),1)[0]]
     return row
 
-hidden_size = 256
+hidden_size = 16
 batch_size = 50
 string_len = 50
-n_layers = 3
+n_layers = 1
 starting_lr = .01
 lr_decay_factor = 2.
 #rnn = LSTMmodel(alpha_len, hidden_size)
@@ -52,7 +52,7 @@ for epochs in range(1):
         done_batches += 1
         tot_loss += my_loss.data[0]
         if done_batches%print_every == 0:
-            print epochs, '-', 1.0*done_batches/(text.train_len/(string_len*batch_size)), '%','=' *  int(10 *tot_loss / print_every), tot_loss / print_every
+            print epochs, '-', '{:2.2f}'.format(100.0*done_batches/(text.train_len/(string_len*batch_size))), '%','=' *  int(10 *tot_loss / print_every), tot_loss / print_every
             tot_loss = 0
 
             #torch.save(rnn.state_dict(), 'models/LSTM_'+str(i)+'.md')
