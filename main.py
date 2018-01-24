@@ -32,17 +32,17 @@ rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_la
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
 
 
-
 print_every = 5
 tot_loss=0
 t = time.time()
 valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1)]).data[0]
 
+
 for epochs in range(10):
     index = 0
     done_batches = 0
     rnn.init_hidden()
-    while index < text.test_len+string_len*batch_size:
+    while index < text.train_len+string_len*batch_size:
 
         my_loss = rnn.train(text.get_batch(string_len,batch_size,index,1))
         index += string_len*batch_size
