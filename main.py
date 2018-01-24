@@ -22,16 +22,21 @@ def generate(model, inp='#', temp = 0.7, my_len = 150):
     return row
 
 hidden_size = 64
-#rnn = LSTMmodel(alpha_len, hidden_size)
-rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=3)
-rnn.optimizer = optim.Adam(rnn.parameters(), lr=0.004)
 batch_size = 10
 string_len = 25
+n_layers = 3
+starting_lr = .01
+lr_decay_factor = 2.
+#rnn = LSTMmodel(alpha_len, hidden_size)
+rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_layers)
+rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
+
+
 
 print_every = 5
 tot_loss=0
 t = time.time()
-print text.train_len
+valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1)]).data[0]
 
 for epochs in range(10):
     index = 0
@@ -49,6 +54,12 @@ for epochs in range(10):
 
             #torch.save(rnn.state_dict(), 'models/LSTM_'+str(i)+'.md')
 
-    print 'valid loss', np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1)]).data[0]
+    previous_valid_loss = valid_loss
+    valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1)]).data[0]
+    print 'valid loss', valid_loss, 'previous valid loss',previous_valid_loss
+    if previous_valid_loss < valid_loss:
+        starting_lr /= lr_decay_factor
+        print 'decreasing learning rate to: ', starting_lr
+        rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
     print generate(rnn)
 print time.time()-t
