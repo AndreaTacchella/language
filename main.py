@@ -21,16 +21,16 @@ def generate(model, inp='#', temp = 0.7, my_len = 150):
         row += text.alphabet[torch.multinomial(output.data.view(-1).div(temp).exp(),1)[0]]
     return row
 
-hidden_size = 64
-batch_size = 10
-string_len = 25
+hidden_size = 256
+batch_size = 50
+string_len = 50
 n_layers = 3
 starting_lr = .01
 lr_decay_factor = 2.
 #rnn = LSTMmodel(alpha_len, hidden_size)
 rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_layers)
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
-
+print 'training set length:', text.train_len
 
 print_every = 5
 tot_loss=0
@@ -38,18 +38,19 @@ t = time.time()
 valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1)]).data[0]
 
 
-for epochs in range(10):
+for epochs in range(1):
     index = 0
     done_batches = 0
     rnn.init_hidden()
     while index < text.train_len+string_len*batch_size:
+    #while index < 10000:
 
         my_loss = rnn.train(text.get_batch(string_len,batch_size,index,1))
         index += string_len*batch_size
         done_batches += 1
         tot_loss += my_loss.data[0]
         if done_batches%print_every == 0:
-            print epochs, '-', done_batches, '=' *  int(10 *tot_loss / print_every), tot_loss / print_every
+            print epochs, '-', 1.0*done_batches/(text.train_len/(string_len*batch_size)), '%','=' *  int(10 *tot_loss / print_every), tot_loss / print_every
             tot_loss = 0
 
             #torch.save(rnn.state_dict(), 'models/LSTM_'+str(i)+'.md')
