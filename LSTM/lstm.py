@@ -13,18 +13,23 @@ class LSTMmodel(nn.Module):
                             num_layers=self.n_layers, dropout=0.25)
         self.linear = nn.Linear(self.hidden_size, self.input_size)
         self.embedding = nn.Linear(self.input_size, self.hidden_size)
-        self.logsoft = nn.LogSoftmax()
+        self.logsoft = nn.LogSoftmax(dim=0)
         self.optimizer = 0.
         self.loss_func =  nn.NLLLoss()
+        self.h0 = 0
+        self.c0 = 0
+        self.init_hidden()
+
 
     def forward(self, inp):
-        h0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
-        c0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
+        #self.init_hidden()
         true_inp = []
         for i in range(len(inp)):
             true_inp.append(self.embedding(inp[i]))
         true_inp = torch.stack(true_inp)
-        out, h0 = self.lstm(true_inp, (h0, c0))
+        out, (self.h0, self.c0) = self.lstm(true_inp, (self.h0, self.c0))
+        self.h0 = Variable(self.h0.data)
+        self.c0 = Variable(self.c0.data)
         out = out.view(-1, self.hidden_size)
         true_out = []
         # print 'len inp', len(inp)
@@ -42,20 +47,27 @@ class LSTMmodel(nn.Module):
         self.optimizer.step()
         return loss
 
-    def forward_known_hidden(self, inp, h):
-        #(h0,c0) = h
-        true_inp = []
-        for i in range(len(inp)):
-            true_inp.append(self.embedding(inp[i]))
-        true_inp = torch.stack(true_inp)
-        out, h0 = self.lstm(true_inp, h)
-        out = out.view(-1, self.hidden_size)
-        true_out = []
-        for i in range(len(inp)):
-            true_out.append(self.logsoft(self.linear(out[i])))
-        return torch.stack(true_out), h0
+    # def forward_known_hidden(self, inp, h):
+    #     #(h0,c0) = h
+    #     true_inp = []
+    #     for i in range(len(inp)):
+    #         true_inp.append(self.embedding(inp[i]))
+    #     true_inp = torch.stack(true_inp)
+    #     out, h0 = self.lstm(true_inp, h)
+    #     out = out.view(-1, self.hidden_size)
+    #     true_out = []
+    #     for i in range(len(inp)):
+    #         true_out.append(self.logsoft(self.linear(out[i])))
+    #     return torch.stack(true_out), h0
 
 
     def init_hidden(self):
-        return (Variable(torch.randn(self.n_layers, 1, self.hidden_size)),
-                Variable(torch.randn(self.n_layers, 1, self.hidden_size)))
+        self.h0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
+        self.c0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
+
+    # def init_hidden(self):
+    #     self.h0 = torch.randn(self.n_layers, 1, self.hidden_size)
+    #     self.c0 = torch.randn(self.n_layers, 1, self.hidden_size)
+
+    def set_hidden(self, (h0,c0)):
+        (self.h0, self.c0) = (h0,c0)
