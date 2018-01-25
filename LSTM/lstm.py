@@ -42,6 +42,7 @@ class LSTMmodel(nn.Module):
     def train(self, batch):
         self.zero_grad()
         loss = np.mean([self.loss_func(self.forward(inp), tar) for inp,tar in batch])
+        torch.nn.utils.clip_grad_norm(self.parameters(), 2.)
         #loss = self.loss_func(self.forward(input), labels)
         loss.backward()
         self.optimizer.step()

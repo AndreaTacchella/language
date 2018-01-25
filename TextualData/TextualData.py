@@ -100,11 +100,11 @@ class TextualData():
     def onehot_to_class(self, vector):
         return Variable(torch.LongTensor([i for i in range(len(vector.data)) if vector.data[i] > 0]))
 
-    def __import_text_file(self, path, valid_size = 50000, test_size = 50000) :
+    def __import_text_file(self, path, valid_size = 500000, test_size = 500000) :
         self.full_text = open(path, encoding="utf-8").read()
         self.train_text = self.full_text[:-(valid_size+test_size)]
         self.valid_text = self.full_text[-(valid_size + test_size):-test_size]
         self.test_text = self.full_text[-test_size:]
-        self.alphabet = list(set([l for l in self.train_text]))
+        self.alphabet = list(set([l for l in self.full_text]))
         self.alpha_len = len(self.alphabet)
         self.letter_to_ix = dict((self.alphabet[i], i) for i in range(self.alpha_len))

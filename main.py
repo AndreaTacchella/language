@@ -25,7 +25,7 @@ def generate(model, inp='#', temp = 0.7, my_len = 150):
 
 hidden_size = 16
 batch_size = 50
-string_len = 50
+string_len = 150
 n_layers = 1
 starting_lr = .01
 lr_decay_factor = 2.
