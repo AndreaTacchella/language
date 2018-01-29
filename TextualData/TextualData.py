@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
 from io import open
 import numpy as np
 from torch.autograd import Variable
 import torch
+import spacy
 
 class TextualData():
-    def __init__(self, path):
+    def __init__(self, path, lines = -1):
         self.full_text = []
         self.train_text = []
         self.valid_text = []
@@ -12,13 +14,17 @@ class TextualData():
         self.alphabet = []
         self.alpha_len = 0
         self.letter_to_ix = {}
-        self.__import_text_file(path)
+        self.__import_text_file(path, lines = lines)
         self.train_len = len(self.train_text)
         self.valid_len = len(self.valid_text)
         self.test_len = len(self.test_text)
         self.vocab_len = 0
         self.word_to_ix = {}
         self.latest_char = 0
+        #pos data from spacy
+        self.pos_to_ix = {}
+        self.ix_to_pos = {}
+        self.full_pos = []
 
 
 
@@ -100,11 +106,43 @@ class TextualData():
     def onehot_to_class(self, vector):
         return Variable(torch.LongTensor([i for i in range(len(vector.data)) if vector.data[i] > 0]))
 
-    def __import_text_file(self, path, valid_size = 500000, test_size = 500000) :
+    def __import_text_file(self, path, lines = -1, valid_size = .2, test_size = .2) :
         self.full_text = open(path, encoding="utf-8").read()
-        self.train_text = self.full_text[:-(valid_size+test_size)]
-        self.valid_text = self.full_text[-(valid_size + test_size):-test_size]
-        self.test_text = self.full_text[-test_size:]
+        if lines > 0:
+            self.full_text = self.full_text[:lines]
+
+        self.train_text = self.full_text[:-int((valid_size+test_size)*len(self.full_text))]
+        self.valid_text = self.full_text[-int((valid_size+test_size)*len(self.full_text)):-int(test_size*len(self.full_text))]
+        self.test_text = self.full_text[-int(test_size*len(self.full_text)):]
         self.alphabet = list(set([l for l in self.full_text]))
         self.alpha_len = len(self.alphabet)
         self.letter_to_ix = dict((self.alphabet[i], i) for i in range(self.alpha_len))
+
+    def compute_pos(self):
+        nlp = spacy.load('en')
+        doc = nlp(self.full_text[:300000])
+        allpos = set([tok.pos_ for tok in doc])
+        self.pos_to_ix = {}
+        self.ix_to_pos = {}
+        ix = 0
+        for pos in allpos:
+            self.pos_to_ix[pos] = ix
+            self.ix_to_pos[ix] = pos
+            ix += 1
+        mylen = 100000
+        begin = 0
+        end = mylen
+        while begin < len(self.full_text):
+            mystr = self.full_text[begin:end]
+            begin = end
+            end = min(end + mylen, len(self.full_text))
+            doc = nlp(mystr)
+            pos_by_char = []
+            for tok in doc:
+                pos_by_char.append([self.pos_to_ix[tok.pos_] for l in tok.text_with_ws])
+            pos_by_char = np.array([item for sublist in pos_by_char for item in sublist])
+            self.full_pos.append(pos_by_char)
+            #print begin, end, len(pos_by_char)
+        self.full_pos = [item for sublist in self.full_pos for item in sublist]
+
+
