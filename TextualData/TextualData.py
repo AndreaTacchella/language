@@ -25,6 +25,10 @@ class TextualData():
         self.pos_to_ix = {}
         self.ix_to_pos = {}
         self.full_pos = []
+        self.pos_len = 0
+        self.train_pos = []
+        self.valid_pos = []
+        self.test_pos = []
 
 
 
@@ -34,6 +38,17 @@ class TextualData():
         ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len))
         for i in range(len(my_str)):
             ret[i,0,self.letter_to_ix[my_str[i]]] = 1
+        return ret
+
+    def string_to_tensor_pos(self, string, pos):
+        if len(string) != len(pos):
+            raise ValueError('Pos and String must be of the same length')
+        my_str = string
+        #my_str += '/'
+        ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len+self.pos_len))
+        for i in range(len(my_str)):
+            ret[i,0,self.letter_to_ix[my_str[i]]] = 1
+            ret[i,0,self.alpha_len+pos[i]] = 1
         return ret
 
     def words_to_tensor(self, string):
@@ -76,18 +91,25 @@ class TextualData():
         input_string = self.valid_text[my_rnd:my_rnd + batch_len]
         return input_string
 
-    def get_batch(self, string_len, batch_size, start, stride = 1):
+    def get_batch(self, string_len, batch_size, start, stride = 1, pos = 0):
         if start + string_len*batch_size >= self.train_len:
             raise IndexError('Not enough text to return this batch')
         batch = []
         st = start
-        for i in range(batch_size):
-            batch.append(self.string_to_tensor(self.train_text[st:st + string_len]))
-            st += string_len-1
-        #batch = [self.string_to_tensor(self.random_string_fixed_size(string_len)) for i in range(batch_size)]
-        targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
-        batch = torch.cat(batch, dim=1)[:string_len-stride]
-        return [[batch[:,i],targets[i]] for i in range(batch_size)]
+        if pos == 0:
+            for i in range(batch_size):
+                batch.append(self.string_to_tensor(self.train_text[st:st + string_len]))
+                st += string_len-1
+            targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+            batch = torch.cat(batch, dim=1)[:string_len-stride]
+            return [[batch[:,i],targets[i]] for i in range(batch_size)]
+        if pos == 1:
+            for i in range(batch_size):
+                batch.append(self.string_to_tensor_pos(self.train_text[st:st + string_len], self.train_pos[st:st + string_len]))
+                st += string_len-1
+            targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+            batch = torch.cat(batch, dim=1)[:string_len-stride]
+            return [[batch[:,i],targets[i]] for i in range(batch_size)]
 
     def get_random_batch(self, string_len, batch_size, stride = 1):
         batch = [self.string_to_tensor(self.random_string_fixed_size(string_len)) for i in range(batch_size)]
@@ -95,16 +117,22 @@ class TextualData():
         batch = torch.cat(batch, dim=1)[:string_len-stride]
         return [[batch[:,i],targets[i]] for i in range(batch_size)]
 
-    def get_random_valid_batch(self, string_len, batch_size, stride = 1):
-        batch = [self.string_to_tensor(self.random_valid_string_fixed_size(string_len)) for i in range(batch_size)]
-        targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
-        batch = torch.cat(batch, dim=1)[:string_len-stride]
-        return [[batch[:,i],targets[i]] for i in range(batch_size)]
-
-    #TODO: ADD label return in get_batch, so that batch is in the format expected by train method of model
+    def get_random_valid_batch(self, string_len, batch_size, stride = 1, pos = 0):
+        rnd = np.random.randint(self.valid_len - batch_size)
+        if pos == 0:
+            batch = [self.string_to_tensor(self.valid_text[rnd:rnd+string_len]) for i in range(batch_size)]
+            targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+            batch = torch.cat(batch, dim=1)[:string_len-stride]
+            return [[batch[:,i],targets[i]] for i in range(batch_size)]
+        if pos == 1:
+            batch = [self.string_to_tensor_pos(self.valid_text[rnd:rnd+string_len], self.valid_pos[rnd:rnd+string_len])
+                     for i in range(batch_size)]
+            targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+            batch = torch.cat(batch, dim=1)[:string_len - stride]
+            return [[batch[:, i], targets[i]] for i in range(batch_size)]
 
     def onehot_to_class(self, vector):
-        return Variable(torch.LongTensor([i for i in range(len(vector.data)) if vector.data[i] > 0]))
+        return Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0) & (i < self.alpha_len)]))
 
     def __import_text_file(self, path, lines = -1, valid_size = .2, test_size = .2) :
         self.full_text = open(path, encoding="utf-8").read()
@@ -144,5 +172,9 @@ class TextualData():
             self.full_pos.append(pos_by_char)
             #print begin, end, len(pos_by_char)
         self.full_pos = [item for sublist in self.full_pos for item in sublist]
+        self.train_pos = self.full_pos[:self.train_len]
+        self.valid_pos = self.full_pos[self.train_len:self.train_len + self.valid_len]
+        self.test_pos = self.full_pos[-self.test_len:]
+        self.pos_len = len(self.pos_to_ix.keys())
 
 
