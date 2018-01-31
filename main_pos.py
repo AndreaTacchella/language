@@ -19,30 +19,42 @@ def generate(model, inp='#', temp = 0.7, my_len = 150):
         row += text.alphabet[torch.multinomial(output.data.view(-1).div(temp).exp(),1)[0]]
     return row
 
-hidden_size = 256
+hidden_size = 16
 batch_size = 50
 string_len = 50
+valid_batches = 200
 n_layers = 2
 starting_lr = .025
 lr_decay_factor = 2.
+pos = 1
+#Train the network to predict the charachter appearing after stride - Leave = 1
+stride = 1
 
 
 text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lines = 200000)
-text.compute_pos()
+if pos == 1:
+    print 'Computing POS...'
+    text.compute_pos()
+    print 'POS computed'
 # print text.pos_len
 # print text.get_batch(string_len, batch_size, 0, 1, 1)
 
 
-#rnn = LSTMmodel(alpha_len, hidden_size)
-rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len+text.pos_len, n_layers=n_layers)
+if pos == 1:
+    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len+text.pos_len,
+                         output_s=text.alpha_len, n_layers=n_layers)
+else:
+    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len,
+                         output_s=text.alpha_len, n_layers=n_layers)
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
 print 'training set length:', text.train_len
 
-print_every = 5
-update_every = 50
+print_every = 1
+update_every = 2
 tot_loss=0
 t = time.time()
-valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1,1)]).data[0]
+valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in
+                      text.get_valid_batch(string_len,valid_batches,0,stride,pos)]).data[0]
 print 'starting valid loss', valid_loss
 
 for epochs in range(100):
@@ -51,22 +63,27 @@ for epochs in range(100):
     rnn.init_hidden()
     while (index < text.train_len-string_len*batch_size) & (starting_lr > 0.00005):
 
-        my_loss = rnn.train(text.get_batch(string_len,batch_size,index,1,1))
+        my_loss = rnn.train(text.get_batch(string_len,batch_size,index,stride,pos))
         index += string_len*batch_size
         done_batches += 1
         tot_loss += my_loss.data[0]
         if done_batches%print_every == 0:
-            print epochs, '-', '{:2.2f}'.format(1.0*done_batches/(text.train_len/(string_len*batch_size))), '%','=' *  int(10 *tot_loss / print_every), tot_loss / print_every
+            print epochs, '-', '{:2.2f}'.format(1.0*done_batches/(text.train_len/(string_len*batch_size))), '%',\
+                '=' *  int(10 *tot_loss / print_every), tot_loss / print_every
             tot_loss = 0
 
         if done_batches%update_every == 0:
             previous_valid_loss = valid_loss
-            valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in text.get_random_valid_batch(string_len,500,1,1)]).data[0]
-            torch.save(rnn.state_dict(), 'models/LSTM_'+str(index)+'_loss_'+str('{:2.2f}'.format(valid_loss))+'.md')
+            rnn.init_hidden()
+            valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in
+                                  text.get_valid_batch(string_len,valid_batches,0,stride,pos)]).data[0]
+            torch.save(rnn.state_dict(), 'models/LSTM_nlay_'+str(n_layers)+'_hidsize_'+str(hidden_size)+'_pos_'
+                       +str(pos)+'_itr_'+str(epochs*index+index)+'_loss_'+str('{:2.2f}'.format(valid_loss))+'.md')
             print 'valid loss', valid_loss, 'previous valid loss',previous_valid_loss
             if previous_valid_loss < valid_loss:
                 starting_lr /= lr_decay_factor
                 print 'decreasing learning rate to: ', starting_lr
                 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
+            rnn.init_hidden()
             #print generate(rnn)
 print time.time()-t

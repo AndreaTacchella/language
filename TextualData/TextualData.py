@@ -111,6 +111,27 @@ class TextualData():
             batch = torch.cat(batch, dim=1)[:string_len-stride]
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
 
+    def get_valid_batch(self, string_len, batch_size, start, stride = 1, pos = 0):
+        if start + string_len*batch_size >= self.valid_len:
+            raise IndexError('Not enough text to return this batch')
+        batch = []
+        st = start
+        if pos == 0:
+            for i in range(batch_size):
+                batch.append(self.string_to_tensor(self.valid_text[st:st + string_len]))
+                st += string_len-1
+            targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+            batch = torch.cat(batch, dim=1)[:string_len-stride]
+            return [[batch[:,i],targets[i]] for i in range(batch_size)]
+        if pos == 1:
+            for i in range(batch_size):
+                batch.append(self.string_to_tensor_pos(self.valid_text[st:st + string_len], self.valid_pos[st:st + string_len]))
+                st += string_len-1
+            targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+            batch = torch.cat(batch, dim=1)[:string_len-stride]
+            return [[batch[:,i],targets[i]] for i in range(batch_size)]
+
+
     def get_random_batch(self, string_len, batch_size, stride = 1):
         batch = [self.string_to_tensor(self.random_string_fixed_size(string_len)) for i in range(batch_size)]
         targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
@@ -175,6 +196,7 @@ class TextualData():
         self.train_pos = self.full_pos[:self.train_len]
         self.valid_pos = self.full_pos[self.train_len:self.train_len + self.valid_len]
         self.test_pos = self.full_pos[-self.test_len:]
+        print 'Created POS data. Train_pos len:', len(self.train_pos), 'Valid_pos len:', len(self.valid_pos)
         self.pos_len = len(self.pos_to_ix.keys())
 
 
