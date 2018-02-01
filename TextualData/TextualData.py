@@ -41,15 +41,25 @@ class TextualData():
         return ret
 
 
+    # def string_to_tensor_pos(self, string, pos):
+    #     if len(string) != len(pos):
+    #         raise ValueError('Pos and String must be of the same length')
+    #     my_str = string
+    #     #my_str += '/'
+    #     ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len+self.pos_len))
+    #     for i in range(len(my_str)):
+    #         ret[i,0,self.letter_to_ix[my_str[i]]] = 1
+    #         ret[i,0,self.alpha_len+pos[i]] = 1
+    #     return ret
+
     def string_to_tensor_pos(self, string, pos):
         if len(string) != len(pos):
             raise ValueError('Pos and String must be of the same length')
         my_str = string
         #my_str += '/'
-        ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len+self.pos_len))
+        ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len*self.pos_len))
         for i in range(len(my_str)):
-            ret[i,0,self.letter_to_ix[my_str[i]]] = 1
-            ret[i,0,self.alpha_len+pos[i]] = 1
+            ret[i,0,(pos[i]*self.alpha_len)+self.letter_to_ix[my_str[i]]] = 1
         return ret
 
     def words_to_tensor(self, string):
@@ -154,7 +164,7 @@ class TextualData():
             return [[batch[:, i], targets[i]] for i in range(batch_size)]
 
     def onehot_to_class(self, vector):
-        return Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0) & (i < self.alpha_len)]))
+        return Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0)]))
 
 
     def __import_text_file(self, path, lines = -1, valid_size = .2, test_size = .2) :
@@ -166,6 +176,15 @@ class TextualData():
         self.full_text = self.full_text.replace(u"\u2003", ' ')
         self.full_text = self.full_text.replace(u"\u201c", '\'')
         self.full_text = self.full_text.replace(u"\u201d", '\'')
+        self.full_text = self.full_text.replace(u"\xef", 'i')
+        self.full_text = self.full_text.replace(u"\u201a", ',')
+        self.full_text = self.full_text.replace(u"\xe9", 'e')
+        self.full_text = self.full_text.replace(u"\u2026", '...')
+        self.full_text = self.full_text.replace("&", '')
+        self.full_text = self.full_text.replace(u"\xa0", ' ')
+        self.full_text = self.full_text.replace(u"\xe7", 'c')
+        self.full_text = self.full_text.replace(u"\xe0", 'a')
+
         if self.lower is True:
             self.full_text = self.full_text.lower()
         if lines > 0:

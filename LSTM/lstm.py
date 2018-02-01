@@ -4,15 +4,14 @@ import torch
 import numpy as np
 
 class LSTMmodel(nn.Module):
-    def __init__(self, input_s, output_s, hidden_s, n_layers = 2):
+    def __init__(self, input_s, hidden_s, n_layers = 2):
         super(LSTMmodel, self).__init__()
         self.n_layers = n_layers
         self.hidden_size = hidden_s
         self.input_size = input_s
-        self.output_size = output_s
         self.lstm = nn.LSTM(input_size=self.hidden_size, hidden_size=self.hidden_size,
                             num_layers=self.n_layers, dropout=0.25)
-        self.linear = nn.Linear(self.hidden_size, self.output_size)
+        self.linear = nn.Linear(self.hidden_size, self.input_size)
         self.embedding = nn.Linear(self.input_size, self.hidden_size)
         self.logsoft = nn.LogSoftmax(dim=0)
         self.optimizer = 0.

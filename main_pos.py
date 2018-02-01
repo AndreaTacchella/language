@@ -17,7 +17,7 @@ def generate(model, inp='#', temp = 0.7, my_len = 150):
         row += text.alphabet[torch.multinomial(output.data.view(-1).div(temp).exp(),1)[0]]
     return row
 
-hidden_size = 16
+hidden_size = 64
 batch_size = 50
 string_len = 50
 valid_batches = 200
@@ -25,34 +25,30 @@ n_layers = 2
 starting_lr = .025
 lr_decay_factor = 2.
 pos = 1
-#Train the network to predict the charachter appearing after stride - Leave = 1
+#Train the network to predict the charachter appearing after stride - normally 1
 stride = 1
 
 
-text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lines = 200000, lower=True)
+text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True)
 if pos == 1:
     print 'Computing POS...'
     text.compute_pos()
     print 'POS computed'
     print 'alpha len', text.alpha_len, 'pos len', text.pos_len, 'product', text.alpha_len*text.pos_len
-    print text.alphabet
-    for le in text.alphabet:
-        print 'char', le
-# print text.pos_len
-# print text.get_batch(string_len, batch_size, 0, 1, 1)
+    # print text.alphabet
+    # for l in text.alphabet:
+    #     print 'let', l
 
 
 if pos == 1:
-    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len+text.pos_len,
-                         output_s=text.alpha_len, n_layers=n_layers)
+    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len*text.pos_len, n_layers=n_layers)
 else:
-    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len,
-                         output_s=text.alpha_len, n_layers=n_layers)
+    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_layers)
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
 print 'training set length:', text.train_len
 
-print_every = 1
-update_every = 2
+print_every = 5
+update_every = 50
 tot_loss=0
 t = time.time()
 valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in
