@@ -3,19 +3,9 @@ import LSTM.lstm as lstm
 import numpy as np
 import torch.optim as optim
 import torch
+from torch.autograd import Variable
+from utils import generate_pos
 import time
-
-def generate(model, inp='#', temp = 0.7, my_len = 150):
-    row = inp
-    tensor_string = text.string_to_tensor(row)
-    model.init_hidden()
-    for i in range(len(tensor_string)):
-        output = model.forward(tensor_string[i])
-    row += text.alphabet[torch.multinomial(output.data.view(-1).div(temp).exp(),1)[0]]
-    for i in range(my_len):
-        output= model.forward(text.string_to_tensor(row)[-1])
-        row += text.alphabet[torch.multinomial(output.data.view(-1).div(temp).exp(),1)[0]]
-    return row
 
 hidden_size = 64
 batch_size = 50
@@ -47,6 +37,7 @@ else:
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
 print 'training set length:', text.train_len
 
+
 print_every = 5
 update_every = 50
 tot_loss=0
@@ -69,8 +60,9 @@ for epochs in range(100):
             print epochs, '-', '{:2.2f}'.format(1.0*done_batches/(text.train_len/(string_len*batch_size))), '%',\
                 '=' *  int(10 *tot_loss / print_every), tot_loss / print_every
             tot_loss = 0
-
+        #maybe check validation loss
         if done_batches%update_every == 0:
+            #compute valid loss
             previous_valid_loss = valid_loss
             rnn.init_hidden()
             valid_loss = np.mean([rnn.loss_func(rnn.forward(inp), tar) for inp, tar in
@@ -78,10 +70,20 @@ for epochs in range(100):
             torch.save(rnn.state_dict(), 'models/LSTM_nlay_'+str(n_layers)+'_hidsize_'+str(hidden_size)+'_pos_'
                        +str(pos)+'_itr_'+str(epochs*index+index)+'_loss_'+str('{:2.2f}'.format(valid_loss))+'.md')
             print 'valid loss', valid_loss, 'previous valid loss',previous_valid_loss
+            #generate a sample
+            rnn.init_hidden()
+            test_b = text.get_test_batch(120, 1, 0, 1, 1)
+            input = test_b[0][0]
+            new_text, new_pos = generate_pos(rnn, text, input_tensor=input, verbose=False)
+            print '/\\'*20
+            print ''.join(new_text)
+            print '/\\' * 20
+            rnn.init_hidden()
+            #maybe decrease learning rate
             if previous_valid_loss < valid_loss:
                 starting_lr /= lr_decay_factor
                 print 'decreasing learning rate to: ', starting_lr
                 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
-            rnn.init_hidden()
-            #print generate(rnn)
+
 print time.time()-t
+
