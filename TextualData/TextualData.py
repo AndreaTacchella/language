@@ -6,7 +6,7 @@ import torch
 import spacy
 
 class TextualData():
-    def __init__(self, path, lines = -1):
+    def __init__(self, path, lines=-1, lower=False):
         self.full_text = []
         self.train_text = []
         self.valid_text = []
@@ -14,6 +14,7 @@ class TextualData():
         self.alphabet = []
         self.alpha_len = 0
         self.letter_to_ix = {}
+        self.lower = lower
         self.__import_text_file(path, lines = lines)
         self.train_len = len(self.train_text)
         self.valid_len = len(self.valid_text)
@@ -31,7 +32,6 @@ class TextualData():
         self.test_pos = []
 
 
-
     def string_to_tensor(self, string):
         my_str = string
         #my_str += '/'
@@ -39,6 +39,7 @@ class TextualData():
         for i in range(len(my_str)):
             ret[i,0,self.letter_to_ix[my_str[i]]] = 1
         return ret
+
 
     def string_to_tensor_pos(self, string, pos):
         if len(string) != len(pos):
@@ -155,8 +156,18 @@ class TextualData():
     def onehot_to_class(self, vector):
         return Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0) & (i < self.alpha_len)]))
 
+
     def __import_text_file(self, path, lines = -1, valid_size = .2, test_size = .2) :
         self.full_text = open(path, encoding="utf-8").read()
+        self.full_text = self.full_text.replace(u"\u2019",'\'')
+        self.full_text = self.full_text.replace(u"\u2018", '\'')
+        self.full_text = self.full_text.replace(u"\u2013", '-')
+        self.full_text = self.full_text.replace(u"\u2014", '-')
+        self.full_text = self.full_text.replace(u"\u2003", ' ')
+        self.full_text = self.full_text.replace(u"\u201c", '\'')
+        self.full_text = self.full_text.replace(u"\u201d", '\'')
+        if self.lower is True:
+            self.full_text = self.full_text.lower()
         if lines > 0:
             self.full_text = self.full_text[:lines]
 

@@ -1,11 +1,9 @@
 import TextualData.TextualData
 import LSTM.lstm as lstm
 import numpy as np
-import torch.nn as nn
 import torch.optim as optim
 import torch
 import time
-from torch.autograd import Variable
 
 def generate(model, inp='#', temp = 0.7, my_len = 150):
     row = inp
@@ -31,11 +29,15 @@ pos = 1
 stride = 1
 
 
-text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lines = 200000)
+text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lines = 200000, lower=True)
 if pos == 1:
     print 'Computing POS...'
     text.compute_pos()
     print 'POS computed'
+    print 'alpha len', text.alpha_len, 'pos len', text.pos_len, 'product', text.alpha_len*text.pos_len
+    print text.alphabet
+    for le in text.alphabet:
+        print 'char', le
 # print text.pos_len
 # print text.get_batch(string_len, batch_size, 0, 1, 1)
 
