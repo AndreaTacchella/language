@@ -7,7 +7,6 @@ from torch.autograd import Variable
 from utils import generate_pos
 import time
 
-
 gpu = True
 hidden_size = 64
 batch_size = 50
@@ -21,7 +20,7 @@ pos = 1
 stride = 1
 
 
-text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True, gpu=gpu)
+text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True, gpu=gpu, lines=100000)
 if pos == 1:
     print 'Computing POS...'
     text.compute_pos()
