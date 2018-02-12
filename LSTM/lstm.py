@@ -15,6 +15,11 @@ class LSTMmodel(nn.Module):
         self.linear = nn.Linear(self.hidden_size, self.input_size)
         self.embedding = nn.Linear(self.input_size, self.hidden_size)
         self.logsoft = nn.LogSoftmax(dim=0)
+        if self.gpu is True:
+            self.embedding.cuda()
+            self.linear.cuda()
+            self.lstm.cuda()
+            self.logsoft.cuda()
         self.optimizer = 0.
         self.loss_func =  nn.NLLLoss()
         self.h0 = 0
