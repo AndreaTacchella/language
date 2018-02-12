@@ -21,7 +21,7 @@ pos = 1
 stride = 1
 
 
-text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True)
+text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True, gpu)
 if pos == 1:
     print 'Computing POS...'
     text.compute_pos()
@@ -33,9 +33,9 @@ if pos == 1:
 
 
 if pos == 1:
-    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len*text.pos_len, n_layers=n_layers)
+    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len*text.pos_len, n_layers=n_layers, gpu)
 else:
-    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_layers)
+    rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_layers, gpu)
 if gpu is True:
     rnn.cuda()
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)

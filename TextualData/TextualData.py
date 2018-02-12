@@ -6,7 +6,8 @@ import torch
 import spacy
 
 class TextualData():
-    def __init__(self, path, lines=-1, lower=False):
+    def __init__(self, path, lines=-1, lower=False, gpu = False):
+        self.gpu = gpu
         self.full_text = []
         self.train_text = []
         self.valid_text = []
@@ -113,6 +114,9 @@ class TextualData():
                 st += string_len-1
             targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
             batch = torch.cat(batch, dim=1)[:string_len-stride]
+            if self.gpu is True:
+                batch.cuda()
+                targets.cuda()
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
         if pos == 1:
             for i in range(batch_size):
@@ -120,6 +124,9 @@ class TextualData():
                 st += string_len-1
             targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
             batch = torch.cat(batch, dim=1)[:string_len-stride]
+            if self.gpu is True:
+                batch.cuda()
+                targets.cuda()
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
 
     def get_valid_batch(self, string_len, batch_size, start, stride = 1, pos = 0):
@@ -133,6 +140,9 @@ class TextualData():
                 st += string_len-1
             targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
             batch = torch.cat(batch, dim=1)[:string_len-stride]
+            if self.gpu is True:
+                batch.cuda()
+                targets.cuda()
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
         if pos == 1:
             for i in range(batch_size):
@@ -140,6 +150,9 @@ class TextualData():
                 st += string_len-1
             targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
             batch = torch.cat(batch, dim=1)[:string_len-stride]
+            if self.gpu is True:
+                batch.cuda()
+                targets.cuda()
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
 
     def get_test_batch(self, string_len, batch_size, start, stride = 1, pos = 0):
@@ -153,6 +166,9 @@ class TextualData():
                 st += string_len-1
             targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
             batch = torch.cat(batch, dim=1)[:string_len-stride]
+            if self.gpu is True:
+                batch.cuda()
+                targets.cuda()
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
         if pos == 1:
             for i in range(batch_size):
@@ -160,6 +176,9 @@ class TextualData():
                 st += string_len-1
             targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
             batch = torch.cat(batch, dim=1)[:string_len-stride]
+            if self.gpu is True:
+                batch.cuda()
+                targets.cuda()
             return [[batch[:,i],targets[i]] for i in range(batch_size)]
 
 

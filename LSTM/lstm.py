@@ -4,9 +4,9 @@ import torch
 import numpy as np
 
 class LSTMmodel(nn.Module):
-    def __init__(self, input_s, hidden_s, n_layers = 2):
+    def __init__(self, input_s, hidden_s, n_layers = 2, gpu):
         super(LSTMmodel, self).__init__()
-        #self.gpu = gpu
+        self.gpu = gpu
         self.n_layers = n_layers
         self.hidden_size = hidden_s
         self.input_size = input_s
@@ -66,6 +66,9 @@ class LSTMmodel(nn.Module):
     def init_hidden(self):
         self.h0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
         self.c0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
+        if self.gpu is True:
+            self.h0.cuda()
+            self.c0.cuda()
 
     # def init_hidden(self):
     #     self.h0 = torch.randn(self.n_layers, 1, self.hidden_size)
@@ -73,3 +76,6 @@ class LSTMmodel(nn.Module):
 
     def set_hidden(self, (h0,c0)):
         (self.h0, self.c0) = (h0,c0)
+        if self.gpu is True:
+            self.h0.cuda()
+            self.c0.cuda()
