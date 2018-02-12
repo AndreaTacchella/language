@@ -24,10 +24,14 @@ class LSTMmodel(nn.Module):
 
     def forward(self, inp):
         #self.init_hidden()
+        temp_inp = inp
+        if self.gpu is True:
+            temp_inp.cuda()
         true_inp = []
         for i in range(len(inp)):
-            true_inp.append(self.embedding(inp[i]))
+            true_inp.append(self.embedding(temp_inp[i]))
         true_inp = torch.stack(true_inp)
+
         out, (self.h0, self.c0) = self.lstm(true_inp, (self.h0, self.c0))
         self.h0 = Variable(self.h0.data)
         self.c0 = Variable(self.c0.data)
