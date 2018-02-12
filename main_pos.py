@@ -7,6 +7,8 @@ from torch.autograd import Variable
 from utils import generate_pos
 import time
 
+
+gpu = False
 hidden_size = 64
 batch_size = 50
 string_len = 50
@@ -34,9 +36,11 @@ if pos == 1:
     rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len*text.pos_len, n_layers=n_layers)
 else:
     rnn = lstm.LSTMmodel(hidden_s=hidden_size, input_s=text.alpha_len, n_layers=n_layers)
+if gpu is True:
+    rnn.cuda()
 rnn.optimizer = optim.Adam(rnn.parameters(), lr=starting_lr)
-print 'training set length:', text.train_len
 
+print 'training set length:', text.train_len
 
 print_every = 5
 update_every = 50
