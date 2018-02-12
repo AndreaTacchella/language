@@ -4,8 +4,9 @@ import torch
 import numpy as np
 
 class LSTMmodel(nn.Module):
-    def __init__(self, input_s, hidden_s, n_layers = 2):
+    def __init__(self, input_s, hidden_s, n_layers = 2, gpu):
         super(LSTMmodel, self).__init__()
+        self.gpu = gpu
         self.n_layers = n_layers
         self.hidden_size = hidden_s
         self.input_size = input_s
@@ -42,6 +43,7 @@ class LSTMmodel(nn.Module):
     def train(self, batch):
         self.zero_grad()
         loss = np.mean([self.loss_func(self.forward(inp), tar) for inp,tar in batch])
+        torch.nn.utils.clip_grad_norm(self.parameters(), 2.)
         #loss = self.loss_func(self.forward(input), labels)
         loss.backward()
         self.optimizer.step()
