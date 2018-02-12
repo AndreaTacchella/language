@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 class LSTMmodel(nn.Module):
-    def __init__(self, input_s, hidden_s, n_layers = 2, gpu):
+    def __init__(self, input_s, hidden_s, n_layers = 2, gpu = False):
         super(LSTMmodel, self).__init__()
         self.gpu = gpu
         self.n_layers = n_layers
