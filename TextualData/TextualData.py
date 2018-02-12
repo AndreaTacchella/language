@@ -61,7 +61,7 @@ class TextualData():
         ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len*self.pos_len))
         for i in range(len(my_str)):
             ret[i,0,(pos[i]*self.alpha_len)+self.letter_to_ix[my_str[i]]] = 1
-        if self.gpu is true:
+        if self.gpu is True:
             ret.cuda()
         return ret
 
