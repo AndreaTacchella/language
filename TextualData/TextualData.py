@@ -105,6 +105,15 @@ class TextualData():
         input_string = self.valid_text[my_rnd:my_rnd + batch_len]
         return input_string
 
+    def text_pos_to_batch(self, string, pos, stride = 1):
+        batch = []
+        batch_size = 1
+        for i in range(batch_size):
+            batch.append(self.string_to_tensor_pos(string, pos))
+        targets = [torch.cat([self.onehot_to_class(b[0]) for b in batch[bn][stride:]]) for bn in range(batch_size)]
+        batch = torch.cat(batch, dim=1)[:len(string)-stride]
+        return [[batch[:,i],targets[i]] for i in range(batch_size)]
+
     def get_batch(self, string_len, batch_size, start, stride = 1, pos = 0):
         if start + string_len*batch_size >= self.train_len:
             raise IndexError('Not enough text to return this batch')
