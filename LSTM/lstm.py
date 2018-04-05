@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 class LSTMmodel(nn.Module):
-    def __init__(self, input_s, hidden_s, n_layers = 2, gpu):
+    def __init__(self, input_s, hidden_s, n_layers = 2, gpu = False):
         super(LSTMmodel, self).__init__()
         self.gpu = gpu
         self.n_layers = n_layers
@@ -14,7 +14,10 @@ class LSTMmodel(nn.Module):
                             num_layers=self.n_layers, dropout=0.25)
         self.linear = nn.Linear(self.hidden_size, self.input_size)
         self.embedding = nn.Linear(self.input_size, self.hidden_size)
-        self.logsoft = nn.LogSoftmax(dim=0)
+        if torch.__version__ == '0.2.0_4':
+            self.logsoft = nn.LogSoftmax()
+        else:
+            self.logsoft = nn.LogSoftmax(dim=0)
         self.optimizer = 0.
         self.loss_func =  nn.NLLLoss()
         self.h0 = 0
