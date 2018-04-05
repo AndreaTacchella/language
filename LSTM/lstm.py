@@ -14,7 +14,7 @@ class LSTMmodel(nn.Module):
                             num_layers=self.n_layers, dropout=0.25)
         self.linear = nn.Linear(self.hidden_size, self.input_size)
         self.embedding = nn.Linear(self.input_size, self.hidden_size)
-        self.logsoft = nn.LogSoftmax(dim=0)
+        self.logsoft = nn.LogSoftmax()
         if self.gpu is True:
             self.embedding.cuda()
             self.linear.cuda()

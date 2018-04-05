@@ -20,7 +20,7 @@ pos = 1
 stride = 1
 
 
-text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True, gpu=gpu, lines=100000)
+text = TextualData.TextualData.TextualData(path='data/full_shak_eng.txt', lower=True, gpu=gpu, lines=100000     )
 if pos == 1:
     print 'Computing POS...'
     text.compute_pos()
