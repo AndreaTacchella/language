@@ -201,7 +201,7 @@ class TextualData():
     def onehot_to_class(self, vector):
         ret = Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0)]))
         if self.gpu is True:
-            ret = ret.cuda()
+            ret = ret.cuda()git pull
         return ret
 
 
