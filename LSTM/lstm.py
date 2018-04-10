@@ -34,7 +34,7 @@ class LSTMmodel(nn.Module):
         out, (self.h0, self.c0) = self.lstm(true_inp, (self.h0, self.c0))
         self.h0 = Variable(self.h0.data)
         self.c0 = Variable(self.c0.data)
-        if gpu is True:
+        if self.gpu is True:
             self.h0=self.h0.cuda()
             self.c0=self.c0.cuda()
         out = out.view(-1, self.hidden_size)
@@ -72,7 +72,7 @@ class LSTMmodel(nn.Module):
     def init_hidden(self):
         self.h0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
         self.c0 = Variable(torch.randn(self.n_layers, 1, self.hidden_size))
-        if gpu is True:
+        if self.gpu is True:
             self.h0=self.h0.cuda()
             self.c0=self.c0.cuda()
 
@@ -82,6 +82,6 @@ class LSTMmodel(nn.Module):
 
     def set_hidden(self, (h0,c0)):
         (self.h0, self.c0) = (h0,c0)
-        if gpu is True:
+        if self.gpu is True:
             self.h0=self.h0.cuda()
             self.c0=self.c0.cuda()
