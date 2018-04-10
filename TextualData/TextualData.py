@@ -6,7 +6,8 @@ import torch
 import spacy
 
 class TextualData():
-    def __init__(self, path, lines=-1, lower=False):
+    def __init__(self, path, lines=-1, lower=False, gpu=False):
+        self.gpu=gpu
         self.full_text = []
         self.train_text = []
         self.valid_text = []
@@ -38,6 +39,8 @@ class TextualData():
         ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len))
         for i in range(len(my_str)):
             ret[i,0,self.letter_to_ix[my_str[i]]] = 1
+        if self.gpu is True:
+            ret=ret.cuda()
         return ret
 
 
@@ -52,6 +55,14 @@ class TextualData():
     #         ret[i,0,self.alpha_len+pos[i]] = 1
     #     return ret
 
+    def batch_to_text(self, batch):
+        bc = batch[0][0]
+        return [self.alphabet[self.onehot_to_class(b).data[0] % self.alpha_len] for b in bc]
+
+    def batch_to_pos(self, batch):
+        bc = batch[0][0]
+        return [self.ix_to_pos[int(self.onehot_to_class(b).data[0] / self.alpha_len)] for b in bc]
+
     def string_to_tensor_pos(self, string, pos):
         if len(string) != len(pos):
             raise ValueError('Pos and String must be of the same length')
@@ -60,6 +71,8 @@ class TextualData():
         ret = Variable(torch.zeros(len(my_str), 1, self.alpha_len*self.pos_len))
         for i in range(len(my_str)):
             ret[i,0,(pos[i]*self.alpha_len)+self.letter_to_ix[my_str[i]]] = 1
+        if self.gpu is True:
+            ret = ret.cuda()
         return ret
 
     def words_to_tensor(self, string):
@@ -71,6 +84,8 @@ class TextualData():
                 ret[i,0,self.word_to_ix[my_str[i]]] = 1
             else:
                 ret[i,0,self.word_to_ix['UNK']] = 1
+        if self.gpu is True:
+            ret = ret.cuda()
         return ret
 
     def random_string(self, batch_len, rnd=-1):
@@ -184,7 +199,10 @@ class TextualData():
             return [[batch[:, i], targets[i]] for i in range(batch_size)]
 
     def onehot_to_class(self, vector):
-        return Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0)]))
+        ret = Variable(torch.LongTensor([i for i in range(len(vector.data)) if (vector.data[i] > 0)]))
+        if self.gpu is True:
+            ret = ret.cuda()
+        return ret
 
 
     def __import_text_file(self, path, lines = -1, valid_size = .2, test_size = .2) :
